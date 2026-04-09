@@ -1,8 +1,7 @@
-- 👋 Hi, I’m @Icaro01
-- 👀 I’m interested in  seguir minha carreira como desenvolvedor.
-- 🌱 sou formado em um curso particular de programação, curso particular de inglês e estou finalizando meu curso de análise e desenvolvimento de sistemas na FIAP.
-- 💞️ I’m looking to collaborate on  tudo o que for possivel
-- 📫 How to reach me : pelo email "icarorochagomes15@gmail.com" ou pelo WhatsApp "11943002331
+👋 Hi, I’m @Icaro01👀 I’m interested in pursuing my career as a developer.
+🌱 I have completed private courses in programming and English, and I graduated in Systems Analysis and Development from FIAP.
+💞️ I’m looking to collaborate on anything possible.
+📫 How to reach me: via email at "icarorochagomes15@gmail.com" or WhatsApp at "+55 11 94300-2331".
 
 <!---
 Icaro01/Icaro01 is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
