@@ -4,7 +4,7 @@
 
 💞️ I’m looking to collaborate on anything possible.
 
-📫 How to reach me: via email at "icarorochagomes15@gmail.com" or WhatsApp at "+55 11 94300-2331".
+📫 How to reach me: Email at "icarorochagomes15@gmail.com" or WhatsApp at "+55 11 94300-2331".
 
 <!---
 Icaro01/Icaro01 is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
