@@ -1,6 +1,9 @@
 👋 Hi, I’m @Icaro01👀 I’m interested in pursuing my career as a developer.
+
 🌱 I have completed private courses in programming and English, and I graduated in Systems Analysis and Development from FIAP.
+
 💞️ I’m looking to collaborate on anything possible.
+
 📫 How to reach me: via email at "icarorochagomes15@gmail.com" or WhatsApp at "+55 11 94300-2331".
 
 <!---
