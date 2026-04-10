@@ -1,0 +1,143 @@
+#Projeto automacao de recebimento de emails e reenvio em formato de planilha
+
+import imaplib
+import email
+from email.header import decode_header
+from email.utils import parseaddr
+from datetime import datetime
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+from openpyxl import Workbook  # instalar dependencia: pip install openpyxl
+
+EMAIL_LOGIN = "seuemail@gmail.com"  # Adicionar seu email (será usado para ler e enviar emails)
+EMAIL_SENHA = "sua_senha_de_app"  # Adicionar senha de app do email (não usar senha normal)
+
+IMAP_SERVER = "imap.gmail.com"  # Servidor de leitura (Gmail). Se for Outlook, alterar
+SMTP_SERVER = "smtp.gmail.com"  # Servidor de envio (Gmail). Se for Outlook, alterar
+
+REMETENTE_FILTRO = "email_que_envia@gmail.com"  # Email que vai ENVIAR os dados (origem)
+DESTINATARIO_FILTRO = "seuemail@gmail.com"  # Email que RECEBE o email (normalmente igual ao login)
+EMAIL_ENVIO = "email_que_recebe@gmail.com"  # Email que vai RECEBER a planilha pronta
+
+PALAVRA_CHAVE = "palavra_chave"  # Palavra que deve estar no ASSUNTO do email para ser processado
+
+def buscar_emails():
+    mail = imaplib.IMAP4_SSL(IMAP_SERVER)  # Conecta ao servidor IMAP
+    mail.login(EMAIL_LOGIN, EMAIL_SENHA)  # Faz login no email
+    mail.select("inbox")  # Seleciona a caixa de entrada
+
+    result, data = mail.search(None, "ALL")  # Busca todos os emails
+    emails = data[0].split()  # Lista de emails encontrados
+
+    print(f"Total de emails encontrados: {len(emails)}")  # Mostra apenas quantidade
+
+    return emails, mail  # Retorna lista de emails + conexão
+
+def converter_texto_para_lista(texto):
+    linhas = texto.strip().split("\n")  # Quebra o texto por linha
+    dados = []
+
+    for linha in linhas:
+        if ":" in linha:  # Só processa linhas no formato Campo: Valor
+            chave, valor = linha.split(":", 1)
+            dados.append([chave.strip(), valor.strip()])
+
+    return dados
+
+def criar_planilha(dados):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Dados do Email"
+
+    ws.append(["Campo", "Valor"])  
+
+    for linha in dados:
+        ws.append(linha)  # Adiciona cada linha na planilha
+
+    nome_arquivo = f"email_{datetime.now().strftime('%d%m%Y_%H%M')}.xlsx"  # Nome do arquivo
+    wb.save(nome_arquivo)
+
+    print(f"Planilha criada: {nome_arquivo}")
+    return nome_arquivo
+
+def enviar_email(destinatario, arquivo):
+    msg = MIMEMultipart()
+    msg["From"] = EMAIL_LOGIN  
+    msg["To"] = destinatario 
+    msg["Subject"] = "Planilha gerada automaticamente"  
+
+    corpo = f"Segue a planilha gerada automaticamente em {datetime.now().strftime('%d/%m/%Y')}."
+    msg.attach(MIMEText(corpo, "plain"))
+
+    with open(arquivo, "rb") as f:
+        part = MIMEBase("application", "octet-stream")
+        part.set_payload(f.read())
+
+    encoders.encode_base64(part)
+    part.add_header("Content-Disposition", f'attachment; filename="{arquivo}"')
+    msg.attach(part)
+
+    server = smtplib.SMTP(SMTP_SERVER, 587)
+    server.starttls()  
+    server.login(EMAIL_LOGIN, EMAIL_SENHA)  
+    server.send_message(msg)  
+    server.quit()
+
+    print("Email enviado com sucesso!")
+
+# Processar SOMENTE O EMAIL MAIS RECENTE
+def processar_email():
+    emails, mail = buscar_emails()
+
+    # Percorre do mais novo para o mais antigo
+    for num in reversed(emails):
+
+        _, data = mail.fetch(num, "(RFC822)")
+        if not data or data[0] is None:
+            continue
+
+        msg = email.message_from_bytes(data[0][1])
+
+        from_email = parseaddr(msg.get("From", ""))[1]  # Extrai email de origem
+        to_email = parseaddr(msg.get("To", ""))[1]  # Extrai email de destino
+
+        subject, encoding = decode_header(msg.get("Subject", ""))[0]
+        if isinstance(subject, bytes):
+            subject = subject.decode(encoding or "utf-8")
+
+        # Pegar corpo do email
+        body = ""
+        if msg.is_multipart():
+            for part in msg.walk():
+                if part.get_content_type() == "text/plain":
+                    payload = part.get_payload(decode=True)
+                    if payload:
+                        body += payload.decode("utf-8", errors="ignore")
+        else:
+            payload = msg.get_payload(decode=True)
+            if payload:
+                body = payload.decode("utf-8", errors="ignore")
+
+        # Filtro (remetente + destinatário + palavra-chave)
+        if (REMETENTE_FILTRO == from_email and
+            DESTINATARIO_FILTRO == to_email and
+            PALAVRA_CHAVE.lower() in subject.lower()):
+
+            print("Último email válido encontrado!")
+
+            dados = converter_texto_para_lista(body)
+
+            if dados:
+                arquivo = criar_planilha(dados)  
+                enviar_email(EMAIL_ENVIO, arquivo)  
+            else:
+                print("Não foi possível extrair dados.")
+
+            break  
+
+    mail.logout()  # Encerra conexão
+
+processar_email()  # Inicia o sistema
